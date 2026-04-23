@@ -1,15 +1,17 @@
 package org.hmis;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class Main {
     public static void main(String[] args) {
-    	String ruta = "data/coches.json";
-    	
+        Path rutaPath = Path.of("data", "coches.json");
+        if (!Files.exists(rutaPath)) {
+        	rutaPath = Path.of("hmis-coches", "data", "coches.json");
+        }
+        String ruta = rutaPath.toAbsolutePath().normalize().toString();
+        System.out.println("Direccion del archivo: " + ruta);
+
     	Coche[] coches = JsonReader.leerCochesJSON(ruta);
     	
     	// Imprimir los objetos del arreglo

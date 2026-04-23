@@ -2,9 +2,12 @@ package org.hmis;
 
 import java.util.Objects;
 
+import com.google.gson.annotations.SerializedName;
+
 public class Coche {
     private String marca;
     private String modelo;
+    @SerializedName(value = "año", alternate = {"anio"})
     private int año;
     private int precio;
 

@@ -10,26 +10,27 @@ import com.google.gson.JsonParser;
 public class JsonReader {
 
 	public static Coche[] leerCochesJSON (String archivo) {
-
-		Coche[] coches = null;
         Gson gson = new Gson();
-        JsonParser parser = new JsonParser();
 
         try (FileReader reader = new FileReader(archivo)) {
             // Parsear el archivo JSON en un objeto de la clase JsonObject
-            JsonObject jsonObject = parser.parse(reader).getAsJsonObject();
+            JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
 
             // Obtener el arreglo de objetos "coches"
             JsonArray cochesJson = jsonObject.getAsJsonArray("coches");
 
+            if (cochesJson == null) {
+                return new Coche[0];
+            }
+
             // Crear un arreglo de la clase Coche y llenarlo con los objetos del archivo JSON
-            coches = gson.fromJson(cochesJson, Coche[].class);
+            Coche[] coches = gson.fromJson(cochesJson, Coche[].class);
+            return coches != null ? coches : new Coche[0];
 
             
         } catch (Exception e) {
-            e.printStackTrace();
+            return new Coche[0];
         }
-        return coches;
-        
+
 	}
 }
