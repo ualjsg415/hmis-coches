@@ -1,0 +1,61 @@
+pipeline {
+  agent any
+  tools {
+    maven "maven default"
+  }
+  stages {
+    stage('Git fetch') {
+      steps {
+        git branch: 'main', url: 'https://github.com/ualjsg415/hmis-coches.git'
+      }
+    }
+    stage('Compile, Test, Package') {
+      steps {
+        sh "mvn -f pom.xml clean package"
+      }
+      post {
+        success {
+          junit '**/target/surefire-reports/TEST-*.xml'
+          archiveArtifacts '**/target/*.jar'
+          jacoco(
+            execPattern: '**/target/jacoco.exec',
+            classPattern: '**/target/classes',
+            sourcePattern: '**/src/',
+            exclusionPattern: '**/test/'
+          )
+          publishCoverage adapters: [jacocoAdapter('**/target/site/jacoco/jacoco.xml')]
+        }
+      }
+    }
+    stage('Analysis') {
+      steps {
+        sh "mvn -f pom.xml site -DossindexAnalyzerEnabled=false"
+      }
+      post {
+        success {
+          dependencyCheckPublisher pattern: '**/target/site/dependency-check-report.xml'
+          recordIssues enabledForFailure: true, tool: checkStyle()
+          recordIssues enabledForFailure: true, tool: pmdParser()
+          recordIssues enabledForFailure: true, tool: cpd()
+          recordIssues enabledForFailure: true, tool: spotBugs()
+        }
+      }
+    }
+    stage('Documentation') {
+      steps {
+        sh "mvn -f pom.xml javadoc:javadoc javadoc:aggregate -DossindexAnalyzerEnabled=false"
+      }
+      post {
+        always  {
+          step $class: 'JavadocArchiver', javadocDir: 'target/site/es/apidocs', keepAll: false
+          publishHTML(target: [
+            reportName: 'Maven Site',
+            reportDir: 'target/site',
+            reportFiles: 'index.html',
+            keepAll: false
+          ])
+        }
+      }
+    }
+  }
+}
